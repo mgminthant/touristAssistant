@@ -1,0 +1,4 @@
+frontEnd/node_modules/
+backEnd/node_modules/
+backEnd/chroma_data
+*.env*
