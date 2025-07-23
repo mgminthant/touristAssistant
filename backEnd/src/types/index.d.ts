@@ -1,4 +1,4 @@
-export interface Message{
-    status?:number,
-    message?:string
+export interface Message {
+  status: number;
+  response: string | undefined;
 }

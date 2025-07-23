@@ -1,11 +1,23 @@
+//This file manage add data to the chromadb
 import { InferenceClient } from "@huggingface/inference";
 import { v4 as uuidv4 } from "uuid";
 import { config } from "../../config";
 import { getOrCreateCollection } from "./chromaService";
+import { Message } from "../../types";
 
 export const hf = new InferenceClient(config.hfApiToken);
 
-export async function queryResponse(query: string, n_results: string) {
+/**
+ * Generate response by embedding query and search in the chromadb collection and feed result to the huggingface chat model
+ * @param {string} query - The query to search for
+ * @param {string} n_results - The number of results to return from chromadb
+ * @returns {Promise<Message>} - http status code and response from the chat model as a promise
+ * @throws will throw ValidationError if query or n_results is invalid and will throw ServiceError if huggingface api fail or chromadb fail
+ */
+export async function queryResponse(
+  query: string,
+  n_results: string
+): Promise<Message> {
   if (typeof query !== "string" || !query.trim()) {
     throw new ValidationError("Sentence must be a string");
   }
@@ -44,7 +56,13 @@ export async function queryResponse(query: string, n_results: string) {
   }
 }
 
-export async function addData(sentence: string) {
+/**
+ * add data to the chromadb collection and contain input validation
+ * @param {string } sentence - The sentence to add
+ * @returns {Promise<Message>} - http status code and message as a promise
+ *  * @throws will throw ValidationError if query or n_results is invalid and will throw ServiceError if huggingface api fail or chromadb fail
+ */
+export async function addData(sentence: string): Promise<Message> {
   // Query(input) Validation
   if (typeof sentence !== "string") {
     throw new ValidationError("Sentence must be a string");
@@ -74,14 +92,19 @@ export async function addData(sentence: string) {
       documents: [sentence.trim()],
     });
 
-    return { status: 200, message: "Sentence added successfully." };
+    return { status: 200, response: "Sentence added successfully." };
   } catch (error) {
     console.error("Error in addData service:", error);
     throw new ServiceError("Failed to add sentence.", error);
   }
 }
 
-// Helper function: Generate embedding
+/**
+ * Helper function to generate embedding and normalize embedding response format to store in chromadb
+ * @param {string} text - sentence for embedding
+ * @returns {Promise<number[]>} - embedding array
+ * @throws will throw error if invalid embedding generated or huggingface api fail
+ */
 async function generateEmbedding(text: string): Promise<number[]> {
   try {
     const embedding = await hf.featureExtraction({
@@ -105,7 +128,9 @@ async function generateEmbedding(text: string): Promise<number[]> {
 }
 
 // Huggingface embedding api can response differently base on input sentence
-// Helper function: Normalize embedding format
+/**
+ * Helper function to normalize embedding response format to store in chromadb
+ */
 // function normalizeEmbedding(embedding: any): number[] {
 //   // Handle nested array: [[0.1, 0.2, 0.3]]
 //   if (Array.isArray(embedding) && Array.isArray(embedding[0])) {
