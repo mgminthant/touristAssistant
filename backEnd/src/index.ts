@@ -15,7 +15,10 @@ app.listen(config.port, async () => {
     await getOrCreateCollection("test_collection");
     console.log(`Server is running on http://localhost:${config.port}`);
   } catch (error) {
-    console.error("Failed to initialize ChromaDB collection on startup:", error);
+    console.error(
+      "Failed to initialize ChromaDB collection on startup:",
+      error
+    );
     process.exit(1);
   }
 });

@@ -1,10 +1,11 @@
 //This file manage add data to the chromadb
+import * as fs from "fs";
 import { InferenceClient } from "@huggingface/inference";
 import { v4 as uuidv4 } from "uuid";
 import { config } from "../../config";
 import { getOrCreateCollection } from "./chromaService";
 import { Message } from "../../types";
-
+import path from "path";
 export const hf = new InferenceClient(config.hfApiToken);
 
 /**
@@ -124,6 +125,29 @@ async function generateEmbedding(text: string): Promise<number[]> {
         error instanceof Error ? error.message : "Unknown error"
       }`
     );
+  }
+}
+
+/**
+ * helper function to extract text from docx file and pdf file
+ * @param {string} filePath - file path
+ * @returns {Promise<string>} - text extracted from file
+ */
+
+export async function extractTextFromTextFile(filePath: string) {
+  const fullPath = path.resolve(__dirname, "../../../uploads", filePath);
+
+  try {
+    if (filePath.endsWith(".txt")) {
+      const data = fs.readFileSync(fullPath, "utf8");
+      addData(data.toString());
+    } else {
+      throw new ValidationError(
+        "File type not supported. Only .txt files are allowed."
+      );
+    }
+  } catch (e) {
+    throw new ServiceError("Failed to extract text from file.", e);
   }
 }
 
